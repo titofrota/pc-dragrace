@@ -2,6 +2,7 @@
 
 # Programação Concorrente - UnB - Ítalo Frota (18/0019279)
 
+![](https://img.buzzfeed.com/buzzfeed-static/static/2021-01/6/20/asset/4b24ac414e7e/anigif_sub-buzz-12644-1609964305-16.gif)
 
 No primeiro episódio da nova temporada de *RuPaul's Drag Race*, temos 16 novas competidoras em busca do título de *"America's Next Drag Superstar"*. Nesta semana, as participantes foram desafiadas a confeccionar figurinos inspirados em professores do Departamento de Ciência da Computação da Universidade de Brasília.
 
