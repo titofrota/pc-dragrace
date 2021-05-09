@@ -30,9 +30,6 @@
 #define BOLD_WHITE "\033[1m"
 #define RESET "\x1b[0m"
 
-//  Quantidades
-#define QTD_QUEENS 16
-
 // Funções
 void * f_rupaul(void *arg);
 void * f_queen(void *arg);
@@ -46,7 +43,8 @@ sem_t queens_sem;             // semáforo das queens
 sem_t espelho_sem;            // semáforo do espelho pras queen se montarem
 sem_t passarela_sem;          // semáforo da queen que está desfilando
 sem_t lipsync_sem;            // semáforo das duas queens dublando
-sem_t mutex_sem;               
+sem_t veredito_sem;           // semáforo do veredito final
+sem_t pronta_sem;             // semáforo do backstage
 
 
 // Variáveis
@@ -55,20 +53,31 @@ int queens_montadas = 0;      // contador de queens montadas
 int queens_desfilaram = 0;    // contador de queens que desfilaram
 int x, y, z;                  // auxiliares
 bool gravando = true;         // flag que determina a duração do episódio
+int qtd_queens;               // quantidade de queens na temporada
+int qtd_espelho;              // quantidade de espelhos para a montação
 
 
-int main (){
+int main (int argc, char *argv[]){
   int * id;
   int i;
+
+  qtd_queens = atoi(argv[1]);
+  qtd_espelho = atoi(argv[2]);
+
+  if((qtd_queens < 8) || (qtd_espelho == 0)){
+	  printf("Valor não permitido. Escolha no mínimo 8 queens e pelo menos 1 espelho.\n");
+    return 0;	
+  }
 
   // Inicialização dos semáforos
   sem_init(&rupaul_sem, 0, 0);
   sem_init(&critica_sem, 0, 0);
-  sem_init(&queens_sem, 0, QTD_QUEENS);
-  sem_init(&espelho_sem, 0, QTD_QUEENS);
+  sem_init(&queens_sem, 0, qtd_queens);
+  sem_init(&espelho_sem, 0, qtd_espelho);
   sem_init(&passarela_sem, 0, 1);
   sem_init(&lipsync_sem, 0, 0);
-  sem_init(&mutex_sem, 0, 0);
+  sem_init(&veredito_sem, 0, 0);
+  sem_init(&pronta_sem, 0, 0);
 
   clrscr();       // limpa a tela
 
@@ -99,14 +108,14 @@ int main (){
   * id = 0;
   pthread_create(&(rupaul), NULL, f_rupaul, (void *)id);      // Thread da RuPaul
   
-  for(i = 0; i < QTD_QUEENS; i++){
+  for(i = 0; i < qtd_queens; i++){
     id = (int *) malloc(sizeof(int));
     * id = i;
     pthread_create(&(queen[i]), NULL, f_queen, (void *)id);   // Thread das Drag Queens
   }
 
 
-  for (i = 0; i < QTD_QUEENS; i++){
+  for (i = 0; i < qtd_queens; i++){
     pthread_join(queen[i], NULL);
   }
 
@@ -131,8 +140,11 @@ void * f_rupaul(void *arg){
       printf(BOLD_WHITE "RUPAUL: " COLOR_MAGENTA "Pilotos, liguem seus motores. E que a melhor Drag Queen vença! \n\n" RESET);
       printf(COLOR_GREEN "\n          ########## As queens vão desfilar ##########\n\n"RESET);
       sleep(3);
+
+      for(i = 0; i < qtd_queens; i++)
+        sem_post(&pronta_sem);        // libera as queens para o backstage
   
-    sem_wait(&critica_sem);
+    sem_wait(&critica_sem);           // espera para criticar as queens
       sleep(1);
       printf(COLOR_GREEN "\n          ########## Todas as queens desfilaram ##########\n\n"RESET);
       sleep(2);
@@ -140,11 +152,11 @@ void * f_rupaul(void *arg){
       printf(COLOR_GREEN "\n          ########## RuPaul está avaliando as competidoras ##########\n"RESET);
 
       // escolha pseudorandomica das queens para o julgamento
-      x = rand() %QTD_QUEENS-1;
-      y = rand() %QTD_QUEENS-1;
-      z = rand() %QTD_QUEENS-1;
+      x = rand() %qtd_queens-1;
+      y = rand() %qtd_queens-1;
+      z = rand() %qtd_queens-1;
 
-      for(i = 0; i < QTD_QUEENS; i++){
+      for(i = 0; i < qtd_queens; i++){
         if((i != y) && (i != z)){
           pthread_cancel(queen[i]);         // encerra as threads das queens que não vão dublar
         }
@@ -170,7 +182,7 @@ void * f_rupaul(void *arg){
       for(i = 0; i < 2; i++)
         sem_post(&lipsync_sem);         // libera as queens para dublar
       
-      sem_wait(&mutex_sem);             // espera para dar o veredito final
+      sem_wait(&veredito_sem);             // espera para dar o veredito final
 
       // escolha pseudorandômica de qual queen vai sair
       srand(time(NULL));
@@ -197,17 +209,18 @@ void * f_queen(void *arg){
       queens_montadas++;
       sleep(1);                   // se monta
       printf(COLOR_YELLOW "A queen %d terminou de se montar.\n" RESET, id);
-      if(queens_montadas ==  QTD_QUEENS){
+      if(queens_montadas ==  qtd_queens){
         sem_post(&rupaul_sem);    // se todas as queens estiverem prontas, acorda a RuPaul
       }
-      sem_post(&espelho_sem);
-
+    sem_post(&espelho_sem);       // libera o espelho
     
+    sem_wait(&pronta_sem);      // espera permissão para ir pro backstage
+
     // As queens desfilam, uma de cada vez
     sem_wait(&passarela_sem);
       queens_desfilaram++;
       sleep(1);                 // desfila
-      if(queens_desfilaram == QTD_QUEENS){      // Quando todas as queens desfilam, a RuPaul avalia
+      if(queens_desfilaram == qtd_queens){      // Quando todas as queens desfilam, a RuPaul avalia
         sem_post(&critica_sem);
       }
       printf(COLOR_CYAN "A queen %d desfilou na passarela.\n" RESET, id);
@@ -216,7 +229,7 @@ void * f_queen(void *arg){
     sem_wait(&lipsync_sem);     // espera para dublar
       printf(COLOR_CYAN "A queen %d está dublando.\n" RESET, id);
       sleep(1);                 // dubla
-      sem_post(&mutex_sem);     // libera a decisão final
+      sem_post(&veredito_sem);     // libera a decisão final
 
   }
 
