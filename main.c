@@ -207,8 +207,8 @@ void * f_queen(void *arg){
     // As queens se montam
     sem_wait(&espelho_sem);       // semáforo para usar o espelho
       queens_montadas++;
-      sleep(1);                   // se monta
       printf(COLOR_YELLOW "A queen %d terminou de se montar.\n" RESET, id);
+      sleep(1);                   // se monta
       if(queens_montadas ==  QTD_QUEENS){
         sem_post(&rupaul_sem);    // se todas as queens estiverem prontas, acorda a RuPaul
       }
