@@ -41,7 +41,6 @@ pthread_t queen[QTD_QUEENS], rupaul;
 
 sem_t rupaul_sem;             // semáforo da rupaul
 sem_t critica_sem;            // semáforo da crítica da rupaul
-sem_t queens_sem;             // semáforo das queens
 sem_t espelho_sem;            // semáforo do espelho pras queen se montarem
 sem_t passarela_sem;          // semáforo da queen que está desfilando
 sem_t lipsync_sem;            // semáforo das duas queens dublando
@@ -72,7 +71,6 @@ int main (int argc, char *argv[]){
   // Inicialização dos semáforos
   sem_init(&rupaul_sem, 0, 0);
   sem_init(&critica_sem, 0, 0);
-  sem_init(&queens_sem, 0, QTD_QUEENS);
   sem_init(&espelho_sem, 0, qtd_espelho);
   sem_init(&passarela_sem, 0, 1);
   sem_init(&lipsync_sem, 0, 0);
@@ -191,7 +189,6 @@ void * f_rupaul(void *arg){
 
       printf(BOLD_WHITE "\nRUPAUL: " COLOR_MAGENTA "Senhoras, eu tomei a minha decisão.\n" RESET);
       printf(BOLD_WHITE "RUPAUL: " COLOR_MAGENTA "Queen nº%d, a sua hora não é essa. Você sempre será uma superestrela! Sashay, pode ir.\n" RESET, result);
-
       gravando =  false;            // encerra o episódio
     
   }
