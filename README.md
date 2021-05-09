@@ -14,3 +14,9 @@ Assim que todas mostraram o figurino na passarela, é hora do julgamento. A RuPa
 As *queens* dublam e então uma é escolhida para dar adeus à competição.
 
 O problema é solucionado com o uso de threads e semáforos, aplicando conceitos de programação concorrente e *multithreading*.
+
+# Como executar?
+ - Para compilar, basta executar o seguinte comando no terminal:
+ `gcc -pthread -o dragrace main.c`
+ - Para executar:
+ `./dragrace [QTD_ESPELHOS]` , com QTD_ESPELHOS > 1.
